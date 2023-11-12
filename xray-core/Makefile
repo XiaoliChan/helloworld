@@ -12,6 +12,9 @@ PKG_MAINTAINER:=Tianling Shen <cnsztl@immortalwrt.org>
 PKG_LICENSE:=MPL-2.0
 PKG_LICENSE_FILES:=LICENSE
 
+PKG_CONFIG_DEPENDS:= \
+	CONFIG_XRAY_CORE_COMPRESS_UPX
+
 PKG_BUILD_DIR:=$(BUILD_DIR)/Xray-core-$(PKG_VERSION)
 PKG_BUILD_DEPENDS:=golang/host
 PKG_BUILD_PARALLEL:=1
@@ -36,9 +39,24 @@ define Package/xray-core
   DEPENDS:=$(GO_ARCH_DEPENDS) +ca-bundle
 endef
 
+define Package/xray-core/config
+  config XRAY_CORE_COMPRESS_UPX
+    bool "Compress executable files with UPX"
+    default y
+endef
+
 define Package/xray-core/description
   Xray, Penetrates Everything. It helps you to build your own computer network.
   It secures your network connections and thus protects your privacy.
+endef
+
+GO_PKG_TARGET_VARS:=$(filter-out CGO_ENABLED=%,$(GO_PKG_TARGET_VARS)) CGO_ENABLED=0
+
+define Build/Compile
+	$(call GoPackage/Build/Compile)
+ifneq ($(CONFIG_XRAY_CORE_COMPRESS_UPX),)
+	upx --lzma --best $(GO_PKG_BUILD_BIN_DIR)/main
+endif
 endef
 
 define Package/xray-core/install

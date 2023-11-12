@@ -20,6 +20,9 @@ PKG_LICENSE:=GPL-3.0
 PKG_LICENSE_FILE:=LICENSE
 PKG_MAINTAINER:=sbwml <admin@cooluc.com>
 
+PKG_CONFIG_DEPENDS:= \
+	CONFIG_V2DAT_COMPRESS_UPX
+
 PKG_BUILD_DEPENDS:=golang/host
 PKG_BUILD_PARALLEL:=1
 
@@ -28,7 +31,7 @@ GO_PKG:=github.com/urlesistiana/v2dat
 include $(INCLUDE_DIR)/package.mk
 include $(TOPDIR)/feeds/packages/lang/golang/golang-package.mk
 
-define Package/v2dat
+define Package/v2dat/Default
   SECTION:=utils
   CATEGORY:=Utilities
   TITLE:=V2ray geo/ip data unpack tools
@@ -36,7 +39,36 @@ define Package/v2dat
   DEPENDS:=$(GO_ARCH_DEPENDS)
 endef
 
+define Package/v2dat
+  $(call Package/v2dat/Default)
+  DEPENDS:=$(GO_ARCH_DEPENDS)
+endef
+
+define Package/v2dat/config
+  config V2DAT_COMPRESS_UPX
+    bool "Compress executable files with UPX"
+    default y
+endef
+
+define Build/Prepare
+	$(call Build/Prepare/Default)
+endef
+
 GO_PKG_TARGET_VARS:=$(filter-out CGO_ENABLED=%,$(GO_PKG_TARGET_VARS)) CGO_ENABLED=0
+
+define Build/UpdateDependencies
+	cd $(PKG_BUILD_DIR) && \
+		go get -u && \
+		go mod tidy
+endef
+
+define Build/Compile
+	$(call Build/UpdateDependencies)
+	$(call GoPackage/Build/Compile)
+ifneq ($(CONFIG_V2DAT_COMPRESS_UPX),)
+	upx --lzma --best $(GO_PKG_BUILD_BIN_DIR)/v2dat
+endif
+endef
 
 define Package/v2dat/install
 	$(call GoPackage/Package/Install/Bin,$(1))
