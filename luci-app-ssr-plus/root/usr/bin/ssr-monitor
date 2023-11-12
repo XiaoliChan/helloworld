@@ -106,13 +106,42 @@ while [ "1" == "1" ]; do #死循环
 		fi
 	#mosdns
 	elif [ "$pdnsd_process" -eq 3 ]; then
-		icount=$(busybox ps -w | grep $TMP_BIN_PATH/mosdns | grep -v grep | wc -l)
+		icount=$(busybox ps -w | grep $TMP_BIN_PATH/mosdns | grep -v "grep\|shunt" | wc -l)
 		if [ "$icount" -lt 1 ]; then #如果进程挂掉就重启它
 			logger -t "$NAME" "mosdns tunnel error.restart!"
 			echolog "mosdns tunnel error.restart!"
-			dnsserver=$(uci_get_by_type global tunnel_forward 8.8.4.4:53)
-			kill -9 $(busybox ps -w | grep $TMP_BIN_PATH/mosdns | grep -v grep | awk '{print $1}') >/dev/null 2>&1
-			ln_start_bin $(first_type mosdns) mosdns start -c /etc/mosdns/config.yaml
+			chinadns_mosdns=$(uci_get_by_type global chinadns_forward_mosdns)
+			netflix_enable=$(uci_get_by_type global netflix_enable)
+			# clean up
+			if [ -n "$chinadns_mosdns" ]; then
+				if [ "$netflix_enable" == 1 ]; then
+					jq_ssr 'del(.plugins[6].args.upstreams)' $TMP_PATH/mosdns-config-chinadns.json
+				else
+					jq_ssr 'del(.plugins[5].args.upstreams)' $TMP_PATH/mosdns-config-chinadns.json
+				fi
+				if [ "$chinadns_mosdns" = "wan" ]; then
+					wandns=$(ifstatus wan | jsonfilter -e '@["dns-server"]' | sed 's/\[//g; s/\]//g' | sed 's/"//g' | sed 's/ //g' | sed 's/,/ /g')
+					tmp=$(for i in $(echo $wandns); do
+						i="udp://$i:53"
+						if [ "$netflix_enable" == 1 ]; then
+							jq_ssr '.plugins[6].args.upstreams += [{"addr":"'"${i}"'"}]' $TMP_PATH/mosdns-config-chinadns.json
+						else
+							jq_ssr '.plugins[5].args.upstreams += [{"addr":"'"${i}"'"}]' $TMP_PATH/mosdns-config-chinadns.json
+						fi
+					done)
+				else
+					tmp=$(for i in $(echo $chinadns_mosdns | sed "s/,/ /g"); do
+						if [ "$netflix_enable" == 1 ]; then
+							jq_ssr '.plugins[6].args.upstreams += [{"addr":"'"${i}"'"}]' $TMP_PATH/mosdns-config-chinadns.json
+						else
+							jq_ssr '.plugins[5].args.upstreams += [{"addr":"'"${i}"'"}]' $TMP_PATH/mosdns-config-chinadns.json
+						fi
+					done)
+				fi
+				ln_start_bin $(first_type mosdns) mosdns start -c $TMP_PATH/mosdns-config-chinadns.json
+			else
+				ln_start_bin $(first_type mosdns) mosdns start -c $TMP_PATH/mosdns-config.json
+			fi
 		fi
 	fi
 	#chinadns-ng
