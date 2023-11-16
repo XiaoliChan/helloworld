@@ -6,45 +6,45 @@
 # This is free software, licensed under the GNU General Public License v3.
 # See /LICENSE for more information.
 #
-TAG="_SS_SPEC_RULE_"                                  # comment tag
-IPT="iptables -t nat"                                 # alias of iptables
-FWI=$(uci get firewall.shadowsocksr.path 2>/dev/null) # firewall include file
+TAG="_SS_SPEC_RULE_"									# comment tag
+IPT="iptables -t nat"									# alias of iptables
+FWI=$(uci get firewall.shadowsocksr.path 2>/dev/null)	# firewall include file
 usage() {
 	cat <<-EOF
 		Usage: ssr-rules [options]
 
 		Valid options are:
 
-		    -s <server_ip>          ip address of shadowsocksr remote server
-		    -l <local_port>         port number of shadowsocksr local server
-		    -S <server_ip>          ip address of shadowsocksr remote UDP server
-		    -L <local_port>         port number of shadowsocksr local UDP server
-		    -i <ip_list_file>       a file content is bypassed ip list
-		    -a <lan_ips>            lan ip of access control, need a prefix to
-		                            define access control mode
-		    -b <wan_ips>            wan ip of will be bypassed
-		    -w <wan_ips>            wan ip of will be forwarded
-		    -B <bp_lan_ips>         lan ip of will be bypassed proxy
-		    -p <fp_lan_ips>         lan ip of will be global proxy
-		    -G <gm_lan_ips>         lan ip of will be game mode proxy
-		    -D <proxy_ports>        proxy ports
-		    -F                      shunt mode
-		    -N                      shunt server IP
-		    -M                      shunt proxy mode
-		    -m <Interface>          Interface name
-		    -I <ip_list_file>       a file content is bypassed shunt ip list
-		    -e <extra_options>      extra options for iptables
-		    -o                      apply the rules to the OUTPUT chain
-		    -O                      apply the global rules to the OUTPUT chain
-		    -u                      enable udprelay mode, TPROXY is required
-		    -U                      enable udprelay mode, using different IP
-		                            and ports for TCP and UDP
-		    -f                      flush the rules
-		    -g                      gfwlist mode
-		    -r                      router mode
-		    -c                      oversea mode
-		    -z                      all mode
-		    -h                      show this help message and exit
+			-s <server_ip>			ip address of shadowsocksr remote server
+			-l <local_port>			port number of shadowsocksr local server
+			-S <server_ip>			ip address of shadowsocksr remote UDP server
+			-L <local_port>			port number of shadowsocksr local UDP server
+			-i <ip_list_file>		a file content is bypassed ip list
+			-a <lan_ips>			lan ip of access control, need a prefix to
+									define access control mode
+			-b <wan_ips>			wan ip of will be bypassed
+			-w <wan_ips>			wan ip of will be forwarded
+			-B <bp_lan_ips>			lan ip of will be bypassed proxy
+			-p <fp_lan_ips>			lan ip of will be global proxy
+			-G <gm_lan_ips>			lan ip of will be game mode proxy
+			-D <proxy_ports>		proxy ports
+			-F						shunt mode
+			-N						shunt server IP
+			-M						shunt proxy mode
+			-m <Interface>			Interface name
+			-I <ip_list_file>		a file content is bypassed shunt ip list
+			-e <extra_options>		extra options for iptables
+			-o						apply the rules to the OUTPUT chain
+			-O						apply the global rules to the OUTPUT chain
+			-u						enable udprelay mode, TPROXY is required
+			-U						enable udprelay mode, using different IP
+									and ports for TCP and UDP
+			-f						flush the rules
+			-g						gfwlist mode
+			-r						router mode
+			-c						oversea mode
+			-z						all mode
+			-h						show this help message and exit
 	EOF
 	exit $1
 }
